@@ -63,7 +63,7 @@ docker compose down
 
 4. Klik **Deploy the stack**
 
-De container cloned automatisch de repo, installeert dependencies en start de app op poort **8099**.
+De container haalt automatisch de laatste image op en start de app op poort **8099**.
 
 ## Technologie
 
