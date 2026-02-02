@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FodoMeter</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 28px;
+            color: #2c5f2d;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            background: #fff;
+            border: 3px dashed #ccc;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #2c5f2d;
+            background: #f0f8f0;
+        }
+
+        .upload-area svg {
+            width: 64px;
+            height: 64px;
+            fill: #999;
+            margin-bottom: 12px;
+        }
+
+        .upload-area p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .upload-area .hint {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        input[type="file"] { display: none; }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .preview-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 24px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #2c5f2d;
+            color: #fff;
+        }
+
+        .btn-primary:hover { background: #1e4620; }
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 16px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .status.loading {
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .results {
+            margin: 20px 0;
+        }
+
+        .result-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .result-card h3 {
+            font-size: 15px;
+            color: #2c5f2d;
+            margin-bottom: 8px;
+        }
+
+        .result-card table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .result-card th {
+            text-align: left;
+            font-size: 12px;
+            color: #999;
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-card td {
+            padding: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #856404;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FodoMeter</h1>
+        <p class="subtitle">Maak foto's van je maaltijd, ontvang een ingrediëntenlijst voor de Eetmeter</p>
+
+        <div class="upload-area" id="uploadArea">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <p>Tik om foto's te selecteren</p>
+            <p class="hint">Of sleep ze hierheen</p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+
+        <div class="preview-grid" id="previewGrid"></div>
+
+        <button class="btn btn-primary" id="analyzeBtn" disabled>Analyseer en mail resultaten</button>
+
+        <div class="status" id="status"></div>
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewGrid = document.getElementById('previewGrid');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const statusEl = document.getElementById('status');
+        const resultsEl = document.getElementById('results');
+        let selectedFiles = [];
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            addFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            addFiles(fileInput.files);
+            fileInput.value = '';
+        });
+
+        function addFiles(fileList) {
+            for (const file of fileList) {
+                if (file.type.startsWith('image/')) {
+                    selectedFiles.push(file);
+                }
+            }
+            renderPreviews();
+        }
+
+        function renderPreviews() {
+            previewGrid.innerHTML = '';
+            selectedFiles.forEach((file, i) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                const btn = document.createElement('button');
+                btn.className = 'remove';
+                btn.textContent = '\u00d7';
+                btn.onclick = () => { selectedFiles.splice(i, 1); renderPreviews(); };
+                div.appendChild(img);
+                div.appendChild(btn);
+                previewGrid.appendChild(div);
+            });
+            analyzeBtn.disabled = selectedFiles.length === 0;
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            analyzeBtn.disabled = true;
+            statusEl.className = 'status loading';
+            statusEl.innerHTML = '<span class="spinner"></span> Foto\'s worden geanalyseerd...';
+            resultsEl.innerHTML = '';
+
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('files', f));
+
+            try {
+                const resp = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    throw new Error(data.error || 'Er ging iets mis');
+                }
+
+                statusEl.className = 'status success';
+                let msg = `${data.photos_analyzed} foto('s) geanalyseerd, ${data.total_ingredients} ingrediënten gevonden.`;
+                if (data.mail_sent) {
+                    msg += ' E-mail verzonden!';
+                } else {
+                    msg += ' E-mail kon niet worden verzonden.';
+                }
+                statusEl.textContent = msg;
+
+                if (data.results) {
+                    resultsEl.innerHTML = data.results.map(r => `
+                        <div class="result-card">
+                            <h3>${r.filename}</h3>
+                            <table>
+                                <tr><th>Ingrediënt</th><th>Gewicht</th><th>Bereiding</th></tr>
+                                ${r.ingredienten.map(ing => `
+                                    <tr>
+                                        <td>${ing.naam}</td>
+                                        <td>${ing.gewicht_gram}g</td>
+                                        <td>${ing.bereiding}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                        </div>
+                    `).join('');
+                }
+
+                selectedFiles = [];
+                renderPreviews();
+            } catch (err) {
+                statusEl.className = 'status error';
+                statusEl.textContent = err.message;
+            }
+
+            analyzeBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+services:
+  fodometer:
+    build: .
+    container_name: fodometer
+    restart: unless-stopped
+    ports:
+      - "8099:8000"
+    env_file:
+      - .env

@@ -1,0 +1,15 @@
+services:
+  fodometer:
+    image: ghcr.io/gjagils/fodometer:latest
+    container_name: fodometer
+    restart: unless-stopped
+    ports:
+      - "8099:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - MAIL_TO=${MAIL_TO}
+      - MAIL_FROM=${MAIL_FROM:-}
