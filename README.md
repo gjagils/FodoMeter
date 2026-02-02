@@ -43,6 +43,28 @@ De app draait op poort **8099**. Open `http://<synology-ip>:8099` op je telefoon
 docker compose down
 ```
 
+## Installatie via Portainer
+
+1. Ga naar **Stacks** → **Add stack** in Portainer
+2. Kies **Repository** en vul in:
+   - Repository URL: `https://github.com/gjagils/FodoMeter`
+   - Compose path: `docker-compose.portainer.yml`
+3. Voeg onder **Environment variables** de volgende variabelen toe:
+
+| Variabele | Verplicht | Omschrijving |
+|---|---|---|
+| `OPENAI_API_KEY` | Ja | Je OpenAI API key |
+| `SMTP_HOST` | Nee | SMTP server (standaard `smtp.gmail.com`) |
+| `SMTP_PORT` | Nee | SMTP poort (standaard `587`) |
+| `SMTP_USER` | Ja | SMTP gebruikersnaam |
+| `SMTP_PASSWORD` | Ja | SMTP wachtwoord / app-password |
+| `MAIL_TO` | Ja | E-mailadres waar resultaten naartoe gaan |
+| `MAIL_FROM` | Nee | Afzenderadres (standaard = `SMTP_USER`) |
+
+4. Klik **Deploy the stack**
+
+De container cloned automatisch de repo, installeert dependencies en start de app op poort **8099**.
+
 ## Technologie
 
 - Python / FastAPI
